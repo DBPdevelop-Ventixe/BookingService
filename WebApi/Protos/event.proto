@@ -1,0 +1,27 @@
+﻿syntax = "proto3";
+
+option csharp_namespace = "WebApi";
+
+service EventProto{
+	rpc GetEventById (GetEventRequest) returns (GetEventResponse);
+}
+
+message GetEventRequest{
+	string eventId = 1;
+}
+message GetEventResponse{
+	string event_id = 1;
+	string event_name = 2;
+	string event_description = 3;
+	string event_date = 4;
+	string event_image = 5;
+	Address event_address = 6;
+}
+
+message Address {
+	string street = 1;
+	string zip_code = 2;
+	string city = 3;
+	string state = 4;
+	string country =5;
+}

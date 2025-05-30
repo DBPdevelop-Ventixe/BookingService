@@ -1,5 +1,9 @@
-﻿namespace WebApi.Data;
+﻿using Microsoft.EntityFrameworkCore;
+using WebApi.Entities;
 
-public class DataContext
+namespace WebApi.Data;
+
+public class DataContext(DbContextOptions<DataContext> options) : DbContext(options)
 {
+    public DbSet<BookingEntity> Bookings { get; set; }
 }
