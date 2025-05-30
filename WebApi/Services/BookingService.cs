@@ -11,6 +11,8 @@ public class BookingService(DataContext context, EventProto.EventProtoClient eve
     private readonly DataContext _context = context;
     private readonly EventProto.EventProtoClient _eventProto = eventProto;
 
+
+    // Create
     public async Task<bool> CreateBooking(BookingRegForm booking)
     {
         try
@@ -35,6 +37,18 @@ public class BookingService(DataContext context, EventProto.EventProtoClient eve
             };
 
             _context.Bookings.Add(entity);
+            
+
+            // Set sold tickts for this event package
+            var eventPackage = await _eventProto.SetTicketsSoldAsync(new SetTicketsSoldRequest
+            {
+                PackageId = booking.EventPackageId,
+                TicketsSold = booking.TicketsAmount
+            });
+            if (eventPackage == null || !eventPackage.Success)
+                throw new RpcException(new Status(StatusCode.Internal, "Failed to update tickets sold for the event package."));
+
+            // Save the booking to the database
             var result = await _context.SaveChangesAsync();
             if (result > 0)
                 return true;
@@ -47,6 +61,8 @@ public class BookingService(DataContext context, EventProto.EventProtoClient eve
         }
     }
 
+
+    // Read
     public async Task<List<BookingModel>> GetBookings(string userId)
     {
         try
@@ -74,7 +90,9 @@ public class BookingService(DataContext context, EventProto.EventProtoClient eve
                 City = b.City,
                 State = b.State ?? "",
                 Zip = b.Zip,
-                Country = b.Country
+                Country = b.Country,
+                PaymentStatus = b.IsPayed ? "Paid" : "Not paid",
+                PaymentTransactionId = ""
             }).ToList();
 
             foreach (var booking in bookingModels)
@@ -88,6 +106,7 @@ public class BookingService(DataContext context, EventProto.EventProtoClient eve
                     booking.EventName = eventData.EventName;
                     booking.EventImage = eventData.EventImage;
                     booking.EventDate = eventData.EventDate;
+                    booking.EventTime = eventData.EventTime;
                     booking.EventDescription = eventData.EventDescription;
                     booking.EventStreet = eventData.EventAddress.Street;
                     booking.EventCity = eventData.EventAddress.City;
@@ -96,23 +115,41 @@ public class BookingService(DataContext context, EventProto.EventProtoClient eve
                     booking.EventCountry = eventData.EventAddress.Country;
                 }
 
-                //var paymentData = await _eventProto.GetPaymentByIdAsync(new GetPaymentRequest
-                //{
-                //    PaymentId = booking.Id
-                //});
-                //if (paymentData != null)
-                //{
-                //    booking.PaymentStatus = paymentData.Status;
-                //    booking.PaymentTransactionId = paymentData.TransactionId;
-                //}
-                //else
-                //{
-                booking.PaymentTransactionId = "";
-                booking.PaymentStatus = "Not payed";
-                //}
+                var packageData = eventData.EventPackages
+                    .FirstOrDefault(p => p.Id == booking.EventPackageId);
+
+                if (packageData != null)
+                {
+                    booking.PackageName = packageData.Title;
+                    booking.Benefits = packageData.Benefits.ToArray();
+                }
+                else
+                {
+                    booking.PackageName = "Unknown Package";
+                }
             }
 
             return bookingModels ?? [];
+        }
+        catch (Exception ex)
+        {
+            throw new RpcException(new Status(StatusCode.Internal, ex.Message));
+        }
+    }
+
+    // Update
+    public async Task<bool> PayNow(string bookingId)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(bookingId))
+                throw new RpcException(new Status(StatusCode.InvalidArgument, "Booking ID is required."));
+            var booking = _context.Bookings.FirstOrDefault(b => b.Id == bookingId);
+            if (booking == null)
+                throw new RpcException(new Status(StatusCode.NotFound, "Booking not found."));
+            booking.IsPayed = true;
+            var result = await _context.SaveChangesAsync();
+            return result > 0;
         }
         catch (Exception ex)
         {

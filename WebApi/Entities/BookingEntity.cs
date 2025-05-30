@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace WebApi.Entities;
 
@@ -8,6 +9,8 @@ public class BookingEntity
     public string Id { get; set; } = null!;
 
     public int TicketsAmount { get; set; }
+
+    [Column(TypeName = "decimal(18,2)")]
     public decimal TicketPrice { get; set; }
 
     public string EventId { get; set; } = null!;
@@ -31,4 +34,8 @@ public class BookingEntity
     public string State { get; set; } = null!;
     public string Zip { get; set; } = null!;
     public string Country { get; set; } = null!;
+
+
+    // Payment(Temporary until payment service is created)
+    public bool IsPayed { get; set; }
 }

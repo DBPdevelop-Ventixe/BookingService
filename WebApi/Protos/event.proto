@@ -4,6 +4,7 @@ option csharp_namespace = "WebApi";
 
 service EventProto{
 	rpc GetEventById (GetEventRequest) returns (GetEventResponse);
+	rpc SetTicketsSold (SetTicketsSoldRequest) returns (SetTicketsSoldResponse);
 }
 
 message GetEventRequest{
@@ -14,8 +15,19 @@ message GetEventResponse{
 	string event_name = 2;
 	string event_description = 3;
 	string event_date = 4;
-	string event_image = 5;
-	Address event_address = 6;
+	string event_time = 5;
+	string event_image = 6;
+	Address event_address = 7;
+	repeated Package event_packages = 8;
+}
+
+message SetTicketsSoldRequest {
+	string package_id = 1;
+	int32 tickets_sold = 2;
+}
+message SetTicketsSoldResponse {
+	bool success = 1;
+	string message = 2;
 }
 
 message Address {
@@ -23,5 +35,12 @@ message Address {
 	string zip_code = 2;
 	string city = 3;
 	string state = 4;
-	string country =5;
+	string country = 5;
+}
+
+message Package {
+	string id = 1;
+	string title = 2;
+	repeated string benefits = 3;
+	double price = 4;
 }

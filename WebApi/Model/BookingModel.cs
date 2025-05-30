@@ -36,11 +36,16 @@ public class BookingModel
     public string EventDescription { get; set; } = null!;
     public string EventImage { get; set; } = null!;
     public string EventDate { get; set; } = null!;
+    public string EventTime { get; set; } = null!;
     public string EventStreet { get; set; } = null!;
     public string EventCity { get; set; } = null!;
     public string EventZip { get; set; } = null!;
     public string EventState { get; set; } = null!;
     public string EventCountry { get; set; } = null!;
+
+    // Package
+    public string PackageName { get; set; } = null!;
+    public string[] Benefits { get; set; } = null!;
 
 
     // Payment
